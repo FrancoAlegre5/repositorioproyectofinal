@@ -1,0 +1,44 @@
+# myapp/forms.py
+from django import forms
+from .models import Product
+
+class ProductForm(forms.ModelForm):
+    class Meta:
+        model = Product
+        fields = '__all__'
+
+# myapp/forms.py
+from django import forms
+
+class ProductSearchForm(forms.Form):
+    search_term = forms.CharField(max_length=100, label='Buscar producto')
+
+# myapp/views.py
+from django.shortcuts import render, redirect
+from .models import Product
+from .forms import ProductForm, ProductSearchForm
+
+def create_product(request):
+    if request.method == 'POST':
+        form = ProductForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('product_list')
+    else:
+        form = ProductForm()
+    return render(request, 'create_product.html', {'form': form})
+
+def product_list(request):
+    products = Product.objects.all()
+    return render(request, 'product_list.html', {'products': products})
+
+def search_product(request):
+    if request.method == 'POST':
+        form = ProductSearchForm(request.POST)
+        if form.is_valid():
+            search_term = form.cleaned_data['search_term']
+            products = Product.objects.filter(name__icontains=search_term)
+            return render(request, 'product_list.html', {'products': products})
+    else:
+        form = ProductSearchForm()
+    return render(request, 'search_product.html', {'form': form})
